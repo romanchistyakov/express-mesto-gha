@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/users');
 
 module.exports.createUser = (req, res) => {
@@ -21,6 +22,7 @@ module.exports.getUsers = (req, res) => {
 
 module.exports.getUserById = (req, res) => {
   const { userId } = req.params;
+
   User.findById(userId)
     .then((user) => {
       if (user) {
@@ -28,7 +30,12 @@ module.exports.getUserById = (req, res) => {
       }
       return res.status(404).send({ message: 'Пользователь по указанному _id не найден.' });
     })
-    .catch((error) => res.status(500).send({ message: `Произошла ошибка: ${error.name}` }));
+    .catch((error) => {
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(400).send({ message: 'Передан некорректный _id пользователя' });
+      }
+      return res.status(500).send({ message: `Произошла ошибка: ${error.name}` });
+    });
 };
 
 module.exports.updateUser = (req, res) => {

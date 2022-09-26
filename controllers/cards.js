@@ -2,8 +2,9 @@ const Card = require('../models/cards');
 
 module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
+  const { _id } = req.user;
 
-  Card.create({ name, link, owner: req.user._id })
+  Card.create({ name, link, owner: _id })
     .then((card) => res.send({ data: card }))
     .catch((error) => {
       if (error.name === 'ValidationError') {

@@ -23,6 +23,11 @@ module.exports.getUsers = (req, res) => {
 module.exports.getUserById = (req, res) => {
   const { userId } = req.params;
 
+  if (!mongoose.isValidObjectId(userId)) {
+    res.status(400).send({ message: 'Передан некорректный _id пользователя' });
+    return;
+  }
+
   User.findById(userId)
     .then((user) => {
       if (user) {
@@ -30,18 +35,13 @@ module.exports.getUserById = (req, res) => {
       }
       return res.status(404).send({ message: 'Пользователь по указанному _id не найден.' });
     })
-    .catch((error) => {
-      if (!mongoose.Types.ObjectId.isValid(userId)) {
-        return res.status(400).send({ message: 'Передан некорректный _id пользователя' });
-      }
-      return res.status(500).send({ message: `Произошла ошибка: ${error.name}` });
-    });
+    .catch((error) => res.status(500).send({ message: `Произошла ошибка: ${error.name}` }));
 };
 
 module.exports.updateUser = (req, res) => {
   const { name, about } = req.body;
 
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
+  User.findByIdAndUpdate(req.user._id, { name, about }, { runValidators: true, new: true })
     .then((user) => {
       if (user) {
         return res.send({ data: user });

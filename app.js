@@ -9,6 +9,8 @@ const cards = require('./routes/cards');
 
 const { PORT = 3000 } = process.env;
 
+const ERR_404 = 404;
+
 const app = express();
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
@@ -27,6 +29,6 @@ app.use('/users', users);
 
 app.use('/cards', cards);
 
-app.use('/', (req, res) => res.status(404).send({ message: 'Страница не найдена' }));
+app.use('/', (req, res) => res.status(ERR_404).send({ message: 'Страница не найдена' }));
 
 app.listen(PORT);

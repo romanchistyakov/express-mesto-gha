@@ -1,5 +1,8 @@
-const mongoose = require('mongoose');
 const Card = require('../models/cards');
+
+const ERR_400 = 400;
+const ERR_404 = 404;
+const ERR_500 = 500;
 
 module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
@@ -9,68 +12,64 @@ module.exports.createCard = (req, res) => {
     .then((card) => res.send({ data: card }))
     .catch((error) => {
       if (error.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные при создании карточки.' });
+        return res.status(ERR_400).send({ message: 'Переданы некорректные данные при создании карточки.' });
       }
-      return res.status(500).send({ message: `Произошла ошибка: ${error.name}` });
+      return res.status(ERR_500).send({ message: `Произошла ошибка: ${error.name}` });
     });
 };
 
 module.exports.getCards = (req, res) => {
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch((error) => res.status(500).send({ message: `Произошла ошибка: ${error.name}` }));
+    .catch((error) => res.status(ERR_500).send({ message: `Произошла ошибка: ${error.name}` }));
 };
 
 module.exports.deleteCard = (req, res) => {
   const { cardId } = req.params;
 
-  if (!mongoose.isValidObjectId(cardId)) {
-    res.status(400).send({ message: 'Передан некорректный _id карточки' });
-    return;
-  }
-
   Card.findByIdAndDelete(cardId)
-    .then((card) => {
-      if (card) {
-        return res.send({ data: card });
+    .orFail(new Error('NotFound'))
+    .then((card) => res.send({ data: card }))
+    .catch((error) => {
+      if (error.name === 'CastError') {
+        return res.status(ERR_400).send({ message: 'Передан некорректный _id карточки' });
       }
-      return res.status(404).send({ message: 'Карточка с указанным _id не найдена.' });
-    })
-    .catch((error) => res.status(500).send({ message: `Произошла ошибка: ${error.name}` }));
+      if (error.message === 'NotFound') {
+        return res.status(ERR_404).send({ message: 'Пользователь по указанному _id не найден.' });
+      }
+      return res.status(ERR_500).send({ message: `Произошла ошибка: ${error.name}` });
+    });
 };
 
 module.exports.likeCard = (req, res) => {
   const { cardId } = req.params;
 
-  if (!mongoose.isValidObjectId(cardId)) {
-    res.status(400).send({ message: 'Передан некорректный _id карточки' });
-    return;
-  }
-
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: req.user._id } }, { new: true })
-    .then((card) => {
-      if (card) {
-        return res.send({ data: card });
+    .orFail(new Error('NotFound'))
+    .then((card) => res.send({ data: card }))
+    .catch((error) => {
+      if (error.name === 'CastError') {
+        return res.status(ERR_400).send({ message: 'Передан некорректный _id карточки' });
       }
-      return res.status(404).send({ message: 'Передан несуществующий _id карточки.' });
-    })
-    .catch((error) => res.status(500).send({ message: `Произошла ошибка: ${error.name}` }));
+      if (error.message === 'NotFound') {
+        return res.status(ERR_404).send({ message: 'Пользователь по указанному _id не найден.' });
+      }
+      return res.status(ERR_500).send({ message: `Произошла ошибка: ${error.name}` });
+    });
 };
 
 module.exports.dislikeCard = (req, res) => {
   const { cardId } = req.params;
 
-  if (!mongoose.isValidObjectId(cardId)) {
-    res.status(400).send({ message: 'Передан некорректный _id карточки' });
-    return;
-  }
-
   Card.findByIdAndUpdate(cardId, { $pull: { likes: req.user._id } }, { new: true })
-    .then((card) => {
-      if (card) {
-        return res.send({ data: card });
+    .then((card) => res.send({ data: card }))
+    .catch((error) => {
+      if (error.name === 'CastError') {
+        return res.status(ERR_400).send({ message: 'Передан некорректный _id карточки' });
       }
-      return res.status(404).send({ message: 'Передан несуществующий _id карточки.' });
-    })
-    .catch((error) => res.status(500).send({ message: `Произошла ошибка: ${error.name}` }));
+      if (error.message === 'NotFound') {
+        return res.status(ERR_404).send({ message: 'Пользователь по указанному _id не найден.' });
+      }
+      return res.status(ERR_500).send({ message: `Произошла ошибка: ${error.name}` });
+    });
 };

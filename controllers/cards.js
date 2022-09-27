@@ -62,6 +62,7 @@ module.exports.dislikeCard = (req, res) => {
   const { cardId } = req.params;
 
   Card.findByIdAndUpdate(cardId, { $pull: { likes: req.user._id } }, { new: true })
+    .orFail(new Error('NotFound'))
     .then((card) => res.send({ data: card }))
     .catch((error) => {
       if (error.name === 'CastError') {

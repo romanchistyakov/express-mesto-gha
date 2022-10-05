@@ -1,7 +1,7 @@
 const Card = require('../models/cards');
 const WrongDataError = require('../errors/WrongDataError');
-const NotAuthorizedError = require('../errors/NotAuthorizedError');
 const NotFoundError = require('../errors/NotFoundError');
+const NotAuthorizedCardError = require('../errors/NotAuthorizedCardError');
 
 module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
@@ -30,7 +30,7 @@ module.exports.deleteCard = (req, res, next) => {
     .orFail(new Error('NotFound'))
     .then((card) => {
       if (card.owner !== req.user._id) {
-        next(new NotAuthorizedError('Карточка принадлежит другому пользователю.'));
+        next(new NotAuthorizedCardError('Карточка принадлежит другому пользователю.'));
       }
       return Card.findByIdAndDelete(cardId)
         .then(() => res.send({ data: card }));

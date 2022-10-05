@@ -1,10 +1,9 @@
 const Card = require('../models/cards');
+const WrongDataError = require('../errors/WrongDataError');
+const NotAuthorizedError = require('../errors/NotAuthorizedError');
+const NotFoundError = require('../errors/NotFoundError');
 
-const ERR_400 = 400;
-const ERR_404 = 404;
-const ERR_500 = 500;
-
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   const { _id } = req.user;
 
@@ -12,36 +11,42 @@ module.exports.createCard = (req, res) => {
     .then((card) => res.send({ data: card }))
     .catch((error) => {
       if (error.name === 'ValidationError') {
-        return res.status(ERR_400).send({ message: 'Переданы некорректные данные при создании карточки.' });
+        next(new WrongDataError('Переданы некорректные данные при создании карточки.'));
       }
-      return res.status(ERR_500).send({ message: `Произошла ошибка: ${error.name}` });
+      next();
     });
 };
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch((error) => res.status(ERR_500).send({ message: `Произошла ошибка: ${error.name}` }));
+    .catch(next());
 };
 
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
   const { cardId } = req.params;
 
-  Card.findByIdAndDelete(cardId)
+  Card.findById(cardId)
     .orFail(new Error('NotFound'))
-    .then((card) => res.send({ data: card }))
+    .then((card) => {
+      if (card.owner !== req.user._id) {
+        next(new NotAuthorizedError('Карточка принадлежит другому пользователю.'));
+      }
+      return Card.findByIdAndDelete(cardId)
+        .then(() => res.send({ data: card }));
+    })
     .catch((error) => {
-      if (error.name === 'CastError') {
-        return res.status(ERR_400).send({ message: 'Передан некорректный _id карточки' });
-      }
       if (error.message === 'NotFound') {
-        return res.status(ERR_404).send({ message: 'Пользователь по указанному _id не найден.' });
+        next(new NotFoundError('Пользователь по указанному _id не найден.'));
       }
-      return res.status(ERR_500).send({ message: `Произошла ошибка: ${error.name}` });
+      if (error.name === 'CastError') {
+        next(new WrongDataError('Передан некорректный _id карточки'));
+      }
+      next();
     });
 };
 
-module.exports.likeCard = (req, res) => {
+module.exports.likeCard = (req, res, next) => {
   const { cardId } = req.params;
 
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: req.user._id } }, { new: true })
@@ -49,16 +54,16 @@ module.exports.likeCard = (req, res) => {
     .then((card) => res.send({ data: card }))
     .catch((error) => {
       if (error.name === 'CastError') {
-        return res.status(ERR_400).send({ message: 'Передан некорректный _id карточки' });
+        next(new WrongDataError('Передан некорректный _id карточки'));
       }
       if (error.message === 'NotFound') {
-        return res.status(ERR_404).send({ message: 'Пользователь по указанному _id не найден.' });
+        next(new NotFoundError('Пользователь по указанному _id не найден.'));
       }
-      return res.status(ERR_500).send({ message: `Произошла ошибка: ${error.name}` });
+      next();
     });
 };
 
-module.exports.dislikeCard = (req, res) => {
+module.exports.dislikeCard = (req, res, next) => {
   const { cardId } = req.params;
 
   Card.findByIdAndUpdate(cardId, { $pull: { likes: req.user._id } }, { new: true })
@@ -66,11 +71,11 @@ module.exports.dislikeCard = (req, res) => {
     .then((card) => res.send({ data: card }))
     .catch((error) => {
       if (error.name === 'CastError') {
-        return res.status(ERR_400).send({ message: 'Передан некорректный _id карточки' });
+        next(new WrongDataError('Передан некорректный _id карточки'));
       }
       if (error.message === 'NotFound') {
-        return res.status(ERR_404).send({ message: 'Пользователь по указанному _id не найден.' });
+        next(new NotFoundError('Пользователь по указанному _id не найден.'));
       }
-      return res.status(ERR_500).send({ message: `Произошла ошибка: ${error.name}` });
+      next();
     });
 };

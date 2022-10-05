@@ -18,11 +18,8 @@ router.get('/me', celebrate({
 }), getCurrentUser);
 
 router.get('/:userId', celebrate({
-  headers: Joi.object().keys({
-    authorization: Joi.string().required(),
-  }).unknown(true),
   params: Joi.object().keys({
-    userId: Joi.string().required(),
+    userId: Joi.string().required().hex().length(24),
   }),
 }), getUserById);
 
@@ -31,18 +28,12 @@ router.patch('/me', celebrate({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
   }),
-  headers: Joi.object().keys({
-    authorization: Joi.string().required(),
-  }).unknown(true),
 }), updateUser);
 
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string(),
+    avatar: Joi.string().uri(),
   }),
-  headers: Joi.object().keys({
-    authorization: Joi.string().required(),
-  }).unknown(true),
 }), updateAvatar);
 
 module.exports = router;

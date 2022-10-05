@@ -12,34 +12,21 @@ router.post('/', celebrate({
   }),
 }), createCard);
 
-router.get('/', celebrate({
-  headers: Joi.object().keys({
-    authorization: Joi.string().required(),
-  }).unknown(true),
-}), getCards);
+router.get('/', getCards);
 
 router.delete('/:cardId', celebrate({
-  headers: Joi.object().keys({
-    authorization: Joi.string().required(),
-  }).unknown(true),
   params: Joi.object().keys({
     cardId: Joi.string().required().hex().length(24),
   }),
 }), deleteCard);
 
 router.put('/:cardId/likes', celebrate({
-  headers: Joi.object().keys({
-    authorization: Joi.string().required(),
-  }).unknown(true),
   params: Joi.object().keys({
     cardId: Joi.string().required().hex().length(24),
   }),
 }), likeCard);
 
 router.delete('/:cardId/likes', celebrate({
-  headers: Joi.object().keys({
-    authorization: Joi.string().required(),
-  }).unknown(true),
   params: Joi.object().keys({
     cardId: Joi.string().required().hex().length(24),
   }),

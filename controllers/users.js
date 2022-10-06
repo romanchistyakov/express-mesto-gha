@@ -106,5 +106,5 @@ module.exports.login = (req, res, next) => {
 module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => res.send({ data: user }))
-    .catch(next('Ошибка 500'));
+    .catch((error) => next(error));
 };

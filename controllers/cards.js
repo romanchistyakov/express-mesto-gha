@@ -32,7 +32,7 @@ module.exports.deleteCard = (req, res, next) => {
         next(new NotAuthorizedCardError('Карточка принадлежит другому пользователю.'));
       }
       Card.findByIdAndDelete(cardId)
-        .then(() => res.status(200).send(`Карточка c id "${card._id}" удалена!`));
+        .then(() => res.send({ data: card }));
     })
     .catch((error) => {
       if (error.message === 'NotFound') {

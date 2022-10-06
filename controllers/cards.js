@@ -12,21 +12,23 @@ module.exports.createCard = (req, res, next) => {
     .catch((error) => {
       if (error.name === 'ValidationError') {
         next(new WrongDataError('Переданы некорректные данные при создании карточки.'));
+      } else {
+        next('Ошибка 500');
       }
-      next();
     });
 };
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
-    .then((cards) => res.send({ data: cards }));
+    .then((cards) => res.send({ data: cards }))
+    .catch(next('Ошибка 500'));
 };
 
 module.exports.deleteCard = (req, res, next) => {
   const { cardId } = req.params;
 
   Card.findById(cardId)
-    .orFail(new Error('NotFound'))
+    .orFail(() => { throw new NotFoundError('Карточка по указанному _id не найдена.'); })
     .then((card) => {
       if (card.owner.toString() !== req.user._id) {
         next(new NotAuthorizedCardError('Карточка принадлежит другому пользователю.'));
@@ -35,13 +37,11 @@ module.exports.deleteCard = (req, res, next) => {
         .then(() => res.send({ data: card }));
     })
     .catch((error) => {
-      if (error.message === 'NotFound') {
-        next(new NotFoundError('Карточка по указанному _id не найдена.'));
-      }
       if (error.name === 'CastError') {
         next(new WrongDataError('Передан некорректный _id карточки'));
+      } else {
+        next(error);
       }
-      next();
     });
 };
 
@@ -49,16 +49,14 @@ module.exports.likeCard = (req, res, next) => {
   const { cardId } = req.params;
 
   Card.findByIdAndUpdate(cardId, { $addToSet: { likes: req.user._id } }, { new: true })
-    .orFail(new Error('NotFound'))
+    .orFail(() => { throw new NotFoundError('Карточка по указанному _id не найдена.'); })
     .then((card) => res.send({ data: card }))
     .catch((error) => {
       if (error.name === 'CastError') {
         next(new WrongDataError('Передан некорректный _id карточки'));
+      } else {
+        next(error);
       }
-      if (error.message === 'NotFound') {
-        next(new NotFoundError('Пользователь по указанному _id не найден.'));
-      }
-      next();
     });
 };
 
@@ -66,15 +64,13 @@ module.exports.dislikeCard = (req, res, next) => {
   const { cardId } = req.params;
 
   Card.findByIdAndUpdate(cardId, { $pull: { likes: req.user._id } }, { new: true })
-    .orFail(new Error('NotFound'))
+    .orFail(() => { throw new NotFoundError('Карточка по указанному _id не найдена.'); })
     .then((card) => res.send({ data: card }))
     .catch((error) => {
       if (error.name === 'CastError') {
         next(new WrongDataError('Передан некорректный _id карточки'));
+      } else {
+        next(error);
       }
-      if (error.message === 'NotFound') {
-        next(new NotFoundError('Пользователь по указанному _id не найден.'));
-      }
-      next();
     });
 };

@@ -28,34 +28,33 @@ module.exports.createUser = (req, res, next) => {
         .catch((error) => {
           if (error.name === 'ValidationError') {
             next(new WrongDataError('Переданы некорректные данные при создании пользователя.'));
-          }
-          if (error.code === 11000) {
+          } else if (error.code === 11000) {
             next(new EmailError('Пользователь с данным email уже существует.'));
+          } else {
+            next('Ошибка 500');
           }
-          next();
         });
     });
 };
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
-    .then((users) => res.send({ data: users }));
+    .then((users) => res.send({ data: users }))
+    .catch(next('Ошибка 500'));
 };
 
 module.exports.getUserById = (req, res, next) => {
   const { userId } = req.params;
 
   User.findById(userId)
-    .orFail(new Error('NotFound'))
+    .orFail(() => { throw new NotFoundError('Пользователь по указанному _id не найден.'); })
     .then((user) => res.send({ data: user }))
     .catch((error) => {
       if (error.name === 'CastError') {
         next(new WrongDataError('Передан некорректный _id пользователя'));
+      } else {
+        next(error);
       }
-      if (error.message === 'NotFound') {
-        next(new NotFoundError('Пользователь по указанному _id не найден.'));
-      }
-      next();
     });
 };
 
@@ -63,16 +62,14 @@ module.exports.updateUser = (req, res, next) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { name, about }, { runValidators: true, new: true })
-    .orFail(new Error('NotFound'))
+    .orFail(() => { throw new NotFoundError('Пользователь по указанному _id не найден.'); })
     .then((user) => res.send({ data: user }))
     .catch((error) => {
       if (error.name === 'ValidationError') {
         next(new WrongDataError('Переданы некорректные данные при обновлении данных пользователя.'));
+      } else {
+        next(error);
       }
-      if (error.message === 'NotFound') {
-        next(new NotFoundError('Пользователь по указанному _id не найден.'));
-      }
-      next();
     });
 };
 
@@ -80,16 +77,14 @@ module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { avatar }, { runValidators: true, new: true })
-    .orFail(new Error('NotFound'))
+    .orFail(() => { throw new NotFoundError('Пользователь по указанному _id не найден.'); })
     .then((user) => res.send({ data: user }))
     .catch((error) => {
       if (error.name === 'ValidationError') {
         next(new WrongDataError('Переданы некорректные данные при обновлении аватара.'));
+      } else {
+        next(error);
       }
-      if (error.message === 'NotFound') {
-        next(new NotFoundError('Пользователь по указанному _id не найден.'));
-      }
-      next();
     });
 };
 
@@ -108,7 +103,8 @@ module.exports.login = (req, res, next) => {
     });
 };
 
-module.exports.getCurrentUser = (req, res) => {
+module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
-    .then((user) => res.send({ data: user }));
+    .then((user) => res.send({ data: user }))
+    .catch(next('Ошибка 500'));
 };

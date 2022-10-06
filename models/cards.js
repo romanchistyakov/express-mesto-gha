@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const url = require('../utils/url');
 
 const cardSchema = new mongoose.Schema({
   name: {
@@ -10,6 +11,10 @@ const cardSchema = new mongoose.Schema({
   link: {
     type: String,
     required: true,
+    validate: {
+      validator: (v) => url.test(v),
+      message: (props) => `${props.value} is not a valid link!`,
+    },
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
@@ -18,6 +23,7 @@ const cardSchema = new mongoose.Schema({
   },
   likes: {
     type: [mongoose.Schema.Types.ObjectId],
+    ref: 'user',
     default: [],
   },
   createdAt: {

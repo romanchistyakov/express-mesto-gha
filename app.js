@@ -39,6 +39,8 @@ app.post('/signup', celebrate({
   }),
 }), createUser);
 
+app.use('/', (req, res) => res.status(ERR_404).send({ message: 'Страница не найдена' }));
+
 app.use(errors());
 
 app.use((err, req, res, next) => {
@@ -48,7 +50,5 @@ app.use((err, req, res, next) => {
 
   next();
 });
-
-app.use('/', (req, res) => res.status(ERR_404).send({ message: 'Страница не найдена' }));
 
 app.listen(PORT);

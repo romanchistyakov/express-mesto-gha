@@ -17,10 +17,9 @@ module.exports.createCard = (req, res, next) => {
     });
 };
 
-module.exports.getCards = (req, res, next) => {
+module.exports.getCards = (req, res) => {
   Card.find({})
-    .then((cards) => res.send({ data: cards }))
-    .catch(next());
+    .then((cards) => res.send({ data: cards }));
 };
 
 module.exports.deleteCard = (req, res, next) => {

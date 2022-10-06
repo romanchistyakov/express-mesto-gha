@@ -24,7 +24,7 @@ module.exports.createUser = (req, res, next) => {
         email,
         password: hash,
       })
-        .then((user) => res.send({ data: user }))
+        .then((user) => res.send({ data: user.toObject() }))
         .catch((error) => {
           if (error.name === 'ValidationError') {
             next(new WrongDataError('Переданы некорректные данные при создании пользователя.'));
@@ -37,10 +37,9 @@ module.exports.createUser = (req, res, next) => {
     });
 };
 
-module.exports.getUsers = (req, res, next) => {
+module.exports.getUsers = (req, res) => {
   User.find({})
-    .then((users) => res.send({ data: users }))
-    .catch(next());
+    .then((users) => res.send({ data: users }));
 };
 
 module.exports.getUserById = (req, res, next) => {
@@ -109,8 +108,7 @@ module.exports.login = (req, res, next) => {
     });
 };
 
-module.exports.getCurrentUser = (req, res, next) => {
+module.exports.getCurrentUser = (req, res) => {
   User.findById(req.user._id)
-    .then((user) => res.send({ data: user }))
-    .catch(next());
+    .then((user) => res.send({ data: user }));
 };

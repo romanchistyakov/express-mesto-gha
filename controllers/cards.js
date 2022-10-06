@@ -28,15 +28,15 @@ module.exports.deleteCard = (req, res, next) => {
   Card.findById(cardId)
     .orFail(new Error('NotFound'))
     .then((card) => {
-      if (card.owner._id !== req.user._id) {
+      if (card.owner.toString() !== req.user._id) {
         next(new NotAuthorizedCardError('Карточка принадлежит другому пользователю.'));
       }
-      return Card.findByIdAndDelete(cardId)
-        .then(() => res.send({ data: card }));
+      Card.findByIdAndDelete(cardId)
+        .then(() => res.status(200).send(`Карточка c id "${card._id}" удалена!`));
     })
     .catch((error) => {
       if (error.message === 'NotFound') {
-        next(new NotFoundError('Пользователь по указанному _id не найден.'));
+        next(new NotFoundError('Карточка по указанному _id не найдена.'));
       }
       if (error.name === 'CastError') {
         next(new WrongDataError('Передан некорректный _id карточки'));

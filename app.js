@@ -11,7 +11,7 @@ const auth = require('./middlewares/auth');
 
 const { PORT = 3000 } = process.env;
 
-const ERR_404 = 404;
+const NotFoundError = require('./errors/NotFoundError');
 
 const app = express();
 
@@ -39,7 +39,7 @@ app.post('/signup', celebrate({
   }),
 }), createUser);
 
-app.use('/', (req, res) => res.status(ERR_404).send({ message: 'Страница не найдена' }));
+app.use('/', (req, res, next) => next(new NotFoundError('Страница не найдена!')));
 
 app.use(errors());
 

@@ -40,7 +40,7 @@ module.exports.createUser = (req, res, next) => {
 module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(next('Ошибка 500'));
+    .catch((error) => next(error));
 };
 
 module.exports.getUserById = (req, res, next) => {

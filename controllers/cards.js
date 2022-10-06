@@ -28,7 +28,7 @@ module.exports.deleteCard = (req, res, next) => {
   Card.findById(cardId)
     .orFail(new Error('NotFound'))
     .then((card) => {
-      if (card.owner !== req.user._id) {
+      if (card.owner._id !== req.user._id) {
         next(new NotAuthorizedCardError('Карточка принадлежит другому пользователю.'));
       }
       return Card.findByIdAndDelete(cardId)

@@ -31,7 +31,7 @@ module.exports.createUser = (req, res, next) => {
           } else if (error.code === 11000) {
             next(new EmailError('Пользователь с данным email уже существует.'));
           } else {
-            next('Ошибка 500');
+            next(error);
           }
         });
     });
